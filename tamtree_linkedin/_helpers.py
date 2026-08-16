@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Final
 
 from tamtree_plugin_sdk import ExecutionContext, Item, NodeManifest
@@ -14,6 +15,17 @@ LINKEDIN_VERSION: Final = "202607"
 POSTS_URL: Final = "https://api.linkedin.com/rest/posts"
 USERINFO_URL: Final = "https://api.linkedin.com/v2/userinfo"
 FEED_UPDATE_URL: Final = "https://www.linkedin.com/feed/update/{urn}"
+
+# LinkedIn's feed renders each commentary newline as a paragraph (`<p>` with
+# margin), so a markdown-style blank line (`\n\n`) shows as a double gap.
+# Collapse runs after normalizing CRLF so the post matches what the author typed.
+_BLANK_LINES = re.compile(r"\n{2,}")
+
+
+def format_commentary(text: str) -> str:
+    """Line-break normalizer for Posts API `commentary` (little text)."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return _BLANK_LINES.sub("\n", normalized).strip("\n")
 
 POST_OUTPUT_SCHEMA: Final[dict[str, Any]] = {
     "type": "object",

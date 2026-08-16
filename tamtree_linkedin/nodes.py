@@ -12,6 +12,7 @@ from tamtree_linkedin._helpers import (
     USERINFO_URL,
     bearer_token,
     connector_manifest,
+    format_commentary,
     linkedin_headers,
     person_urn,
     post_item,
@@ -73,6 +74,7 @@ class LinkedInCreatePostNode(ProgrammaticNode):
             commentary = ctx.param("commentary", item=item)
             if commentary is None or not str(commentary).strip():
                 raise NodeConfigurationError("'commentary' is required")
+            commentary = format_commentary(str(commentary))
             visibility = str(ctx.param("visibility", item=item) or "PUBLIC").upper()
             if visibility not in _VISIBILITY:
                 raise NodeConfigurationError(
@@ -90,7 +92,7 @@ class LinkedInCreatePostNode(ProgrammaticNode):
                 headers=headers,
                 json={
                     "author": author_id,
-                    "commentary": str(commentary),
+                    "commentary": commentary,
                     "visibility": visibility,
                     "distribution": {
                         "feedDistribution": "MAIN_FEED",

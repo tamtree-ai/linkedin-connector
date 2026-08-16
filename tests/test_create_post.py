@@ -8,6 +8,7 @@ from tamtree_plugin_sdk import Item
 from tamtree_plugin_sdk.testing import NodeTestKit
 from tamtree_sdk import NodeConfigurationError
 
+from tamtree_linkedin._helpers import format_commentary
 from tamtree_linkedin.nodes import LinkedInCreatePostNode
 
 _TOKEN = "tok-test"
@@ -68,6 +69,24 @@ async def test_create_post_resolves_member_and_reads_restli_id() -> None:
     assert item["lifecycle_state"] == "PUBLISHED"
     assert item["error_code"] is None
     assert item["error_message"] is None
+
+
+async def test_create_post_collapses_blank_lines_in_commentary() -> None:
+    kit = _kit(
+        commentary="Hook\n\nSecond line\r\n\r\nThird",
+        author_urn=_PERSON,
+    ).responses([httpx.Response(201, headers={"x-restli-id": _SHARE})])
+    await kit.run()
+    assert json.loads(kit.requests[0].content)["commentary"] == "Hook\nSecond line\nThird"
+
+
+def test_format_commentary_collapses_blank_lines() -> None:
+    assert format_commentary("a\n\nb") == "a\nb"
+    assert format_commentary("a\n\n\nb") == "a\nb"
+    assert format_commentary("a\r\n\r\nb") == "a\nb"
+    assert format_commentary("a\nb") == "a\nb"
+    assert format_commentary("plain") == "plain"
+    assert format_commentary("\n\nhello\n\n") == "hello"
 
 
 async def test_create_post_skips_userinfo_when_author_urn_set() -> None:

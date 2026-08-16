@@ -1,6 +1,6 @@
 [project]
 name = "tamtree-linkedin-connector"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tamtree community plugin: LinkedIn personal-profile text posts via OAuth and the Posts API."
 readme = "README.md"
 requires-python = ">=3.12"
