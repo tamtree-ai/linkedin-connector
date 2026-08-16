@@ -7,11 +7,14 @@ TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
 SCOPES = "openid profile w_member_social"
 USERINFO_URL = "https://api.linkedin.com/v2/userinfo"
 
-# `CredentialFieldSpec` currently has `placeholder` only — no `default`. Until
-# Tamtree applies field defaults on create, paste these URLs/scopes from the
-# placeholders (or bind the built-in `oauth2` type). Named `linkedin_api` OAuth
-# also needs Tamtree to key the connect flow on `auth_kind`, not type name
-# `"oauth2"`. See README.
+# LinkedIn's endpoints and scope string are the same for every app, so they are
+# `default=` (contracts >= 1.28): the server fills them in on create when the
+# author left the field blank — never on update, never over a supplied value.
+# `placeholder` is kept alongside because it is what the *form* shows; the
+# frontend does not read `default` yet, the server applies it.
+#
+# `test_url` is deliberately not defaulted: it is an opt-in probe, and filling
+# it in would start a userinfo call on every credential nobody asked for.
 LINKEDIN_API = CredentialTypeSpec(
     type="linkedin_api",
     display_name="LinkedIn",
@@ -25,12 +28,14 @@ LINKEDIN_API = CredentialTypeSpec(
             label="Authorize URL",
             secret=False,
             placeholder=AUTHORIZE_URL,
+            default=AUTHORIZE_URL,
         ),
         CredentialFieldSpec(
             name="token_url",
             label="Token URL",
             secret=False,
             placeholder=TOKEN_URL,
+            default=TOKEN_URL,
         ),
         CredentialFieldSpec(
             name="scopes",
@@ -38,6 +43,7 @@ LINKEDIN_API = CredentialTypeSpec(
             secret=False,
             required=False,
             placeholder=SCOPES,
+            default=SCOPES,
         ),
         CredentialFieldSpec(
             name="test_url",

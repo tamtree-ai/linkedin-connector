@@ -1,6 +1,6 @@
 [plugin]
 name = "linkedin-connector"
-version = "0.1.0"
+version = "0.2.0"
 kinds = ["node", "credential_type"]
 license = "Apache-2.0"
 publisher = "tamtree-ai"
@@ -12,7 +12,10 @@ permissions = ["network"]
 egress_allowlist = ["api.linkedin.com", "www.linkedin.com"]
 
 [contracts]
-sdk = "^1.0"
+# 1.28 is where `CredentialFieldSpec.default` lands (credentials.py uses it) and
+# where OAuth is keyed on `auth_kind` rather than the type name `"oauth2"` —
+# below that, this plugin installs but cannot connect.
+sdk = "^1.28"
 
 [entry_points]
 "tamtree.nodes" = "tamtree_linkedin:NODES"

@@ -92,21 +92,23 @@ The access token is never written onto the item.
 
 | Tamtree | Register this one URL |
 |---|---|
-| After the [named-OAuth platform PR](#oauth-needs-a-tamtree-platform-pr) | `https://<your-tamtree-host>/api/oauth/callback` |
-| Today (callback still includes the credential UUID) | `https://<your-tamtree-host>/api/oauth/callback/<credential-id>` — only after the credential row exists |
+| Contracts **1.28+** (what this plugin requires) | `https://<your-tamtree-host>/api/oauth/callback` |
+| Older instances (callback still includes the credential UUID) | `https://<your-tamtree-host>/api/oauth/callback/<credential-id>` — only after the credential row exists |
 
-LinkedIn rejects a mismatch. There is no wildcard, and a new credential is a new UUID, which is why the stable callback is required for a usable connect flow.
+LinkedIn rejects a mismatch. There is no wildcard, and a new credential is a new UUID, which is why the stable callback is required for a usable connect flow. The per-credential path still exists as an alias, so a flow authorized before an upgrade can finish — but register only the stable one.
 
-Client ID and Client secret go into the Tamtree credential. Authorize / token URLs and scopes:
+Client ID and Client secret go into the Tamtree credential. Everything else is filled in for you — the first three rows are `default=` on the field spec, applied server-side on create when you leave the box blank:
 
-| Field | Value |
-|---|---|
-| Authorize | `https://www.linkedin.com/oauth/v2/authorization` |
-| Token | `https://www.linkedin.com/oauth/v2/accessToken` |
-| Scopes | `openid profile w_member_social` |
-| Userinfo (optional probe) | `https://api.linkedin.com/v2/userinfo` |
+| Field | Value | |
+|---|---|---|
+| Authorize | `https://www.linkedin.com/oauth/v2/authorization` | default |
+| Token | `https://www.linkedin.com/oauth/v2/accessToken` | default |
+| Scopes | `openid profile w_member_social` | default |
+| Userinfo (optional probe) | `https://api.linkedin.com/v2/userinfo` | paste to opt in |
 
-Access tokens last **~60 days**. Tamtree refreshes when `refresh_token` and `token_url` are present — once OAuth is keyed on `auth_kind` (see below).
+A default is never applied on **update** and never over a value you supplied, so an emptied field stays empty. The userinfo probe is deliberately not defaulted — filling it in would start a userinfo call on every credential.
+
+Access tokens last **~60 days**. Tamtree refreshes when `refresh_token` and `token_url` are present.
 
 ---
 
@@ -155,14 +157,14 @@ FROM ghcr.io/tamtree/tamtree:${TAMTREE_VERSION}
 docker build --build-arg TAMTREE_VERSION=0.1.0 -t tamtree:linkedin .
 ```
 
-Pin `tamtree-linkedin-connector==0.1.0` in the instance plugin-set, bake, recycle workers (`make plugins-recycle` / Helm roll). Writing `POST /api/admin/plugin-set` installs **nothing by itself** — code arrives only in the next image.
+Pin `tamtree-linkedin-connector==0.2.0` in the instance plugin-set, bake, recycle workers (`make plugins-recycle` / Helm roll). Writing `POST /api/admin/plugin-set` installs **nothing by itself** — code arrives only in the next image.
 
 ---
 
 ## Connect and run a flow
 
-1. **Credentials** → add **LinkedIn**. Client ID + Client secret (URLs/scopes are placeholders until Tamtree grows field defaults).
-2. **Save & connect** — completes only after the platform PR below.
+1. **Credentials** → add **LinkedIn**. Client ID + Client secret; leave the URLs and scopes blank and the defaults fill them in.
+2. **Save & connect** — redirects to LinkedIn and comes back **Connected**.
 3. Canvas: **LinkedIn — Create post**. Bind the credential. Map upstream text into **Post text**.
 4. Run. Downstream: branch on `ok` / `status`, or pass `post_url` to a notification node.
 
@@ -178,33 +180,19 @@ Re-enable is the same switch. Disable does **not** `sys.modules.pop`.
 
 ---
 
-## OAuth: needs a Tamtree platform PR
+## OAuth: requires contracts 1.28
 
-The node binds type **`linkedin_api`** with `auth_kind="oauth2"`. Tamtree’s OAuth machinery is still keyed on the **type name** `"oauth2"`, not `auth_kind`.
+The node binds type **`linkedin_api`** with `auth_kind="oauth2"`. Tamtree’s OAuth machinery used to be keyed on the **type name** `"oauth2"`, which no named type can ever match. That is fixed as of contracts **1.28.0** ([checkolo/tamtree#6](https://github.com/checkolo/tamtree/pull/6)), and `tamtree-plugin.toml` pins `sdk = "^1.28"` accordingly — an older instance **refuses this plugin at boot** (§20.3) rather than installing it into a connect flow that cannot complete.
 
-On unpatched Tamtree:
+What 1.28 brought, all three of it additive:
 
-| Surface | What happens |
-|---|---|
-| Create form | **Save & connect** (frontend reads `auth_kind`) |
-| After save | **No redirect** (`CredentialsPage` only redirects when `created.type === 'oauth2'`) |
-| `GET /api/credentials/{id}/authorize` | **422** (`row.type != "oauth2"`) |
-| Token refresh | **Skipped** (`credentials.py` same check) |
-| Connected / Expired | **Never shown** |
+1. OAuth keyed on `auth_kind` via `merged_credential_types(registry)` — unblocks `linkedin_api` **and** the built-in `google_api` (Gmail, Sheets), which had the same gap.
+2. One stable callback per instance, `{public_url}/api/oauth/callback`; the credential is recovered from the in-flight `state`. The per-credential path stays as an alias and still exchanges against **that** URI, so a flow authorized before the upgrade can finish.
+3. `CredentialFieldSpec.default`, applied on create only — what fills in the URLs and scopes above.
 
-The same gap already affects built-in **`google_api`** (Gmail, Sheets). Fixing it is a platform change, not LinkedIn-specific.
+On an instance older than 1.28 the boot refusal is the whole story; there is no degraded mode to describe. This node also **cannot** fall back to the generic OAuth2 type: `ctx.credential("linkedin_api")` only sees a credential bound as LinkedIn.
 
-This node **cannot** fall back to the generic OAuth2 type: `ctx.credential("linkedin_api")` only sees a credential bound as LinkedIn.
-
-Until that PR lands you can still **install**, **see the node**, and **run the unit tests**. Live posting waits on Tamtree.
-
-Requirement (implementation plan): `changes/2026-08-16-connector-pool/01-oauth-named-types.md` in the Tamtree planning repo — three additive changes:
-
-1. Key OAuth on `auth_kind` via `merged_credential_types(registry)` (unblocks `linkedin_api` **and** `google_api`).
-2. Stable callback `{public_url}/api/oauth/callback` (credential id in stored state / lookup; keep the old path as an alias).
-3. Optional `CredentialFieldSpec.default` so LinkedIn URLs and scopes auto-fill.
-
-After (1)+(2): register **one** redirect URL on the LinkedIn app. After (3): the plugin will pin those defaults in a follow-up release.
+One thing CI cannot cover: the exchange against LinkedIn's real IdP. Register exactly one redirect URL — `https://<host>/api/oauth/callback` — and smoke it.
 
 ---
 
@@ -226,7 +214,7 @@ uv run mypy
 
 Imports: `tamtree_plugin_sdk` only, except `NodeConfigurationError` (not yet re-exported by the facade — `from tamtree_sdk import NodeConfigurationError`). **Never** `tamtree_server` or `tamtree_nodes`.
 
-Manual smoke (after the platform PR): LinkedIn app → connect → one-node flow with a throwaway post.
+Manual smoke (still owed): LinkedIn app → connect → one-node flow with a throwaway post.
 
 ---
 
