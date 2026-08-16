@@ -11,7 +11,7 @@ This is a **community plugin** in its own git repo. Tamtree never vendors the so
 | **Credential** | LinkedIn (`linkedin_api`, OAuth2) |
 | **Plugin / allowlist** | `linkedin-connector` |
 | **Wheel** | `tamtree-linkedin-connector` |
-| **Contracts** | `tamtree-plugin-sdk` `^1.0` (tested against Tamtree `CONTRACTS_VERSION` 1.27.0) |
+| **Icon** | `tamtree_linkedin/icons/linkedin.svg` (thesvg.org `linkedin`, `manifest.icon`) |
 
 v1 is **personal profile, text only** (`openid profile w_member_social` / Share on LinkedIn). Images, video, documents, and company pages are later — company posting needs LinkedIn’s Community Management product and partner review.
 
@@ -218,7 +218,7 @@ uv add 'tamtree-plugin-sdk[testing] @ git+https://github.com/tamtree/tamtree@mai
 
 ```sh
 uv sync --extra testing --extra dev
-uv run pytest          # 18 tests, no network, no LinkedIn
+uv run pytest          # no network, no LinkedIn
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
@@ -230,12 +230,26 @@ Manual smoke (after the platform PR): LinkedIn app → connect → one-node flow
 
 ---
 
+## Icon
+
+The node declares `icon="icons/linkedin.svg"` — a package-relative path from `tamtree_linkedin/`, the same convention as `tamtree-plugin.toml`. The file is the official LinkedIn logomark from [thesvg.org](https://thesvg.org), vendored with the same CLI Tamtree uses for Slack/Gmail/GitHub:
+
+```sh
+npx @thesvg/cli add linkedin --format svg --variant default --dir tamtree_linkedin/icons
+```
+
+Square `viewBox="0 0 256 256"`, 768 bytes, LinkedIn blue `#0A66C2`. Wordmark variant is not used (too wide for the 60px tile).
+
+Until Tamtree serves plugin icons (`GET /api/extensions/{family}/{name}/icon` and `NodeIcon` reading `manifest.icon`), the palette still falls through to the Connectors `Globe`. Shipping the SVG now means that platform work picks it up with no plugin change.
+
+---
+
 ## Out of scope (v1)
 
 - Images / video / documents (Images API register-upload, then Posts API `content.media`)
 - Company pages (`w_organization_social`, organization URN, partner approval)
 - Polling trigger (“new mentions”) — `r_member_social` is restricted
-- In-tree palette brand icon (`BRAND_ICON_TYPE`) — studio falls back to the Connectors glyph
+- First-party `BRAND_ICON_TYPE` entry in Tamtree’s frontend (plugin-declared SVG instead)
 - Tamtree Cloud in-process install (SEC-G1: code plugins are image-bake only)
 
 ---

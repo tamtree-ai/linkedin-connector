@@ -1,6 +1,7 @@
 """Boot-time PluginRegistry.discover() — the refusal paths MinIO also pinned."""
 
 from importlib.metadata import EntryPoint
+from importlib.resources import files
 
 from tamtree_plugin_sdk import GROUP_CREDENTIAL_TYPES, GROUP_NODES, PluginRegistry
 
@@ -30,6 +31,21 @@ def test_credential_type_shape() -> None:
 def test_node_name_matches_manifest() -> None:
     node = LinkedInCreatePostNode()
     assert node.name == node.manifest.name == "linkedin.create_post"
+
+
+def test_node_ships_thesvg_linkedin_mark() -> None:
+    """Package-relative SVG for the plugin-icon path (`manifest.icon`).
+
+    Vendored with `npx @thesvg/cli add linkedin` — the same registry Tamtree
+    uses for in-tree brand marks. Square viewBox, well under the 20 KB cap.
+    """
+    node = LinkedInCreatePostNode()
+    assert node.manifest.icon == "icons/linkedin.svg"
+    svg = (files("tamtree_linkedin") / "icons/linkedin.svg").read_bytes()
+    assert len(svg) < 20_000
+    text = svg.decode()
+    assert 'viewBox="0 0 256 256"' in text
+    assert 'fill="#0A66C2"' in text
 
 
 def test_plugin_discovers_node_and_credential_type() -> None:

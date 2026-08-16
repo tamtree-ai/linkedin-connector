@@ -30,6 +30,7 @@ class LinkedInCreatePostNode(ProgrammaticNode):
         outputs=[post_port()],
         display_name="LinkedIn — Create post",
         description="Publish a text post to the authenticated member's LinkedIn feed.",
+        icon="icons/linkedin.svg",
         credentials=[{"type": "linkedin_api", "required": True}],
         params=[
             {
