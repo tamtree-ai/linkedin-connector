@@ -1,0 +1,19 @@
+[plugin]
+name = "linkedin-connector"
+version = "0.1.0"
+kinds = ["node", "credential_type"]
+license = "Apache-2.0"
+publisher = "tamtree-ai"
+homepage = "https://github.com/tamtree-ai/linkedin-connector"
+repository = "https://github.com/tamtree-ai/linkedin-connector"
+
+[capabilities]
+permissions = ["network"]
+egress_allowlist = ["api.linkedin.com", "www.linkedin.com"]
+
+[contracts]
+sdk = "^1.0"
+
+[entry_points]
+"tamtree.nodes" = "tamtree_linkedin:NODES"
+"tamtree.credential_types" = "tamtree_linkedin:LINKEDIN_API"

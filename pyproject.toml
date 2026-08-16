@@ -1,0 +1,56 @@
+[project]
+name = "tamtree-linkedin-connector"
+version = "0.1.0"
+description = "Tamtree community plugin: LinkedIn personal-profile text posts via OAuth and the Posts API."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["tamtree-plugin-sdk"]
+
+[project.optional-dependencies]
+testing = ["tamtree-plugin-sdk[testing]"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.9",
+    "mypy>=1.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/tamtree-ai/linkedin-connector"
+Repository = "https://github.com/tamtree-ai/linkedin-connector"
+
+[project.entry-points."tamtree.nodes"]
+create_post = "tamtree_linkedin:NODES"
+
+[project.entry-points."tamtree.credential_types"]
+linkedin_api = "tamtree_linkedin:LINKEDIN_API"
+
+[tool.uv.sources]
+# Sibling Tamtree checkout at ~/sites/tamtree. Swap for the git URL in README
+# when developing without that tree.
+tamtree-plugin-sdk = { path = "../../tamtree/packages/plugin-sdk", editable = true }
+tamtree-sdk = { path = "../../tamtree/packages/sdk", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tamtree_linkedin"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["tamtree_linkedin"]
