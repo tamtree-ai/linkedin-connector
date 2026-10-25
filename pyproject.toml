@@ -6,6 +6,15 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
 dependencies = ["tamtree-plugin-sdk"]
+keywords = ["tamtree", "linkedin", "linkedin-api", "oauth2", "workflow-automation", "social-media", "plugin"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications",
+    "Typing :: Typed",
+]
 
 [project.optional-dependencies]
 testing = ["tamtree-plugin-sdk[testing]"]
@@ -18,6 +27,8 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/tamtree-ai/linkedin-connector"
+Documentation = "https://github.com/tamtree-ai/linkedin-connector#readme"
+Tamtree = "https://www.tamtree.io"
 Repository = "https://github.com/tamtree-ai/linkedin-connector"
 
 [project.entry-points."tamtree.nodes"]

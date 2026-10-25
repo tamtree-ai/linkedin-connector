@@ -1,6 +1,6 @@
 # LinkedIn connector for Tamtree
 
-Publish a **text post** to the authenticated member’s LinkedIn feed from a Tamtree pipeline, and get a **structured status** back — post URN, URL, HTTP status — not a silent 201.
+Publish a **text post** to the authenticated member’s LinkedIn feed from a [Tamtree](https://www.tamtree.io) workflow, and get a **structured status** back — post URN, URL, HTTP status — not a silent 201.
 
 This is a **community plugin** in its own git repo. Tamtree never vendors the source. At boot it discovers two Python entry points, the same way it loads Slack and Gmail from `tamtree-nodes`.
 
@@ -182,7 +182,7 @@ Re-enable is the same switch. Disable does **not** `sys.modules.pop`.
 
 ## OAuth: requires contracts 1.28
 
-The node binds type **`linkedin_api`** with `auth_kind="oauth2"`. Tamtree’s OAuth machinery used to be keyed on the **type name** `"oauth2"`, which no named type can ever match. That is fixed as of contracts **1.28.0** ([checkolo/tamtree#6](https://github.com/checkolo/tamtree/pull/6)), and `tamtree-plugin.toml` pins `sdk = "^1.28"` accordingly — an older instance **refuses this plugin at boot** (§20.3) rather than installing it into a connect flow that cannot complete.
+The node binds type **`linkedin_api`** with `auth_kind="oauth2"`. Tamtree’s OAuth machinery used to be keyed on the **type name** `"oauth2"`, which no named type can ever match. That is fixed as of contracts **1.28.0** (Tamtree PR #6), and `tamtree-plugin.toml` pins `sdk = "^1.28"` accordingly — an older instance **refuses this plugin at boot** (§20.3) rather than installing it into a connect flow that cannot complete.
 
 What 1.28 brought, all three of it additive:
 
@@ -198,7 +198,7 @@ One thing CI cannot cover: the exchange against LinkedIn's real IdP. Register ex
 
 ## Develop
 
-This `pyproject.toml` path-depends on a Tamtree checkout at `../../tamtree` (`tamtree-plugin-sdk` + `tamtree-sdk`). Without that tree:
+This `pyproject.toml` path-depends on a Tamtree checkout at `../../tamtree` (`tamtree-plugin-sdk` + `tamtree-sdk`). The Tamtree source is not public yet, so for now building and testing needs access to it. Without that tree, once the SDK is published:
 
 ```sh
 uv add 'tamtree-plugin-sdk[testing] @ git+https://github.com/tamtree/tamtree@main#subdirectory=packages/plugin-sdk'
